@@ -1,0 +1,35 @@
+[
+  {
+    "id": "leader-commander",
+    "username": "commander",
+    "password": "rebuild2200",
+    "displayName": "Commander",
+    "fullName": "Commander",
+    "role": "leader",
+    "status": "assigned",
+    "factionId": null,
+    "assignedRole": null
+  },
+  {
+    "id": "leader-ark-controller",
+    "username": "ark-controller",
+    "password": "override2200",
+    "displayName": "A.R.K. Controller",
+    "fullName": "A.R.K. Controller",
+    "role": "leader",
+    "status": "assigned",
+    "factionId": null,
+    "assignedRole": null
+  },
+  {
+    "id": "leader-outpost-marshal",
+    "username": "outpost-marshal",
+    "password": "holdtheline2200",
+    "displayName": "Outpost Marshal",
+    "fullName": "Outpost Marshal",
+    "role": "leader",
+    "status": "assigned",
+    "factionId": null,
+    "assignedRole": null
+  }
+]

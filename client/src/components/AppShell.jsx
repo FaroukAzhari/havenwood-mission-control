@@ -1,35 +1,32 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { clearSession, getSession } from "../session";
 
-const navItems = [
-  { to: "/", label: "Home" },
-  { to: "/rules", label: "Rules" },
-  { to: "/crew-access", label: "Crew Access" },
-  { to: "/missions", label: "Missions" },
-  { to: "/leader", label: "Leader" }
+const publicNav = [
+  { to: "/", label: "Outpost" },
+  { to: "/rules", label: "Survival Laws" },
+  { to: "/briefing", label: "A.R.K. Briefing" },
+  { to: "/evaluation-system", label: "Human Override Index" }
 ];
 
 export function AppShell({ children, settings }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const session = getSession();
+
+  function handleLogout() {
+    clearSession();
+    navigate("/");
+  }
 
   return (
     <div className="app-shell">
-      <div className="ambient-grid" aria-hidden="true" />
-      <div className="ambient-sun" aria-hidden="true" />
       <header className="topbar">
-        <div className="topbar-brand">
-          <p className="eyebrow">Camp Signal //</p>
-          <h1>{settings?.subtitle || "Havenwood Mission Control"}</h1>
-          <p className="topbar-status">
-            Gate Status: <span>{settings?.overallGateStatus || "Awaiting signal"}</span>
-          </p>
-          <div className="scanline-strip">
-            <span>SAFE ZONE ONLINE</span>
-            <span>ROVER CHANNEL OPEN</span>
-            <span>OTHER SIDE ACTIVITY TRACKED</span>
-          </div>
-        </div>
-        <nav className="topnav">
-          {navItems.map((item) => (
+        <Link className="brand-mark" to="/">
+          <span>A.R.K.</span>
+          <strong>{settings?.campTitle || "The Last Outpost: Year 2200"}</strong>
+        </Link>
+        <nav className="topnav" aria-label="Primary navigation">
+          {publicNav.map((item) => (
             <Link
               key={item.to}
               className={location.pathname === item.to ? "nav-link active" : "nav-link"}
@@ -38,6 +35,11 @@ export function AppShell({ children, settings }) {
               {item.label}
             </Link>
           ))}
+          {session?.role === "rover" ? <Link className="nav-link" to="/rover">Rover Board</Link> : null}
+          {session?.role === "leader" ? <Link className="nav-link" to="/leader">Leader Board</Link> : null}
+          {session ? (
+            <button className="nav-link nav-button" onClick={handleLogout} type="button">Logout</button>
+          ) : null}
         </nav>
       </header>
       <main className="page-wrap">{children}</main>

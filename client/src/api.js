@@ -21,66 +21,58 @@ export const api = {
   getPublicSettings() {
     return request("/settings/public");
   },
-  getCrews() {
-    return request("/crews");
-  },
-  getCrew(id) {
-    return request(`/crews/${id}`);
-  },
-  updateCrewLight(id, delta) {
-    return request(`/crews/${id}/light`, {
+  leaderLogin(username, password) {
+    return request("/auth/leader", {
       method: "POST",
-      body: JSON.stringify({ delta })
+      body: JSON.stringify({ username, password })
     });
   },
-  updateCrewShadow(id, delta) {
-    return request(`/crews/${id}/shadow`, {
-      method: "POST",
-      body: JSON.stringify({ delta })
-    });
-  },
-  updateCrewRecovery(id, amount) {
-    return request(`/crews/${id}/recovery`, {
-      method: "POST",
-      body: JSON.stringify({ amount })
-    });
-  },
-  updateCrewNote(id, note) {
-    return request(`/crews/${id}/note`, {
-      method: "POST",
-      body: JSON.stringify({ note })
-    });
-  },
-  getMissions(crewId) {
-    const query = crewId ? `?crewId=${crewId}` : "";
-    return request(`/missions${query}`);
-  },
-  getMission(id, crewId) {
-    const query = crewId ? `?crewId=${crewId}` : "";
-    return request(`/missions/${id}${query}`);
-  },
-  submitMission(id, crewId, answer) {
-    return request(`/missions/${id}/submit`, {
-      method: "POST",
-      body: JSON.stringify({ crewId, answer })
-    });
-  },
-  getMembers() {
-    return request("/members");
-  },
-  evaluateMember(id, body) {
-    return request(`/members/${id}/evaluate`, {
+  roverSignup(body) {
+    return request("/rovers/signup", {
       method: "POST",
       body: JSON.stringify(body)
     });
   },
+  roverLogin(login, accessCode) {
+    return request("/auth/rover", {
+      method: "POST",
+      body: JSON.stringify({ login, accessCode })
+    });
+  },
+  getRovers() {
+    return request("/rovers");
+  },
+  getRover(id) {
+    return request(`/rovers/${id}`);
+  },
+  updateRoverAssignment(id, body) {
+    return request(`/rovers/${id}/assignment`, {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    });
+  },
+  getFactions() {
+    return request("/factions");
+  },
+  getRoles() {
+    return request("/roles");
+  },
+  getEvaluations() {
+    return request("/evaluations");
+  },
+  saveEvaluation(body) {
+    return request("/evaluations", {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+  },
+  getMissions() {
+    return request("/missions");
+  },
+  getMission(id) {
+    return request(`/missions/${id}`);
+  },
   getReports() {
     return request("/reports");
-  },
-  setMostImproved(memberId) {
-    return request("/reports/most-improved", {
-      method: "POST",
-      body: JSON.stringify({ memberId })
-    });
   }
 };

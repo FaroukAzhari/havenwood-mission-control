@@ -1,37 +1,33 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { api } from "../api";
-import { MissionCard } from "../components/MissionCard";
 
 export function MissionsPage() {
-  const [searchParams] = useSearchParams();
-  const crewId = searchParams.get("crew");
-  const [groups, setGroups] = useState([]);
-  const [error, setError] = useState("");
+  const [missions, setMissions] = useState([]);
 
   useEffect(() => {
-    api.getMissions(crewId)
-      .then(setGroups)
-      .catch((requestError) => setError(requestError.message));
-  }, [crewId]);
+    api.getMissions().then(setMissions);
+  }, []);
 
-  if (error) {
-    return <div className="panel error-panel">{error}</div>;
-  }
-
-  if (!groups.length) {
-    return <div className="panel">Loading mission archive...</div>;
-  }
+  const groups = missions.reduce((acc, mission) => {
+    acc[mission.day] = [...(acc[mission.day] || []), mission];
+    return acc;
+  }, {});
 
   return (
-    <section className="stack">
-      {groups.map((group) => (
-        <article key={group.day} className="panel">
-          <p className="eyebrow">Timeline</p>
-          <h2>{group.day}</h2>
-          <div className="mission-list">
-            {group.missions.map((mission) => (
-              <MissionCard key={mission.id} mission={mission} crewId={crewId} />
+    <section className="page-section">
+      <p className="eyebrow">Daily Missions</p>
+      <h1>Survival Data and Recovery Codes</h1>
+      {Object.entries(groups).map(([day, dayMissions]) => (
+        <article className="mission-group" key={day}>
+          <h2>{day}</h2>
+          <div className="content-grid">
+            {dayMissions.map((mission) => (
+              <Link className="info-card mission-link" to={`/missions/${mission.id}`} key={mission.id}>
+                <span>{mission.points} pts</span>
+                <h3>{mission.title}</h3>
+                <p>{mission.storyIntro}</p>
+              </Link>
             ))}
           </div>
         </article>

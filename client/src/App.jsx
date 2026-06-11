@@ -2,20 +2,29 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { AppShell } from "./components/AppShell";
+import { isLeaderSession, isRoverSession } from "./session";
 import { HomePage } from "./pages/HomePage";
 import { RulesPage } from "./pages/RulesPage";
-import { CrewAccessPage } from "./pages/CrewAccessPage";
-import { CrewDashboardPage } from "./pages/CrewDashboardPage";
+import { BriefingPage } from "./pages/BriefingPage";
+import { EvaluationSystemPage } from "./pages/EvaluationSystemPage";
+import { RoverSignupPage } from "./pages/RoverSignupPage";
+import { RoverLoginPage } from "./pages/RoverLoginPage";
+import { RoverDashboardPage } from "./pages/RoverDashboardPage";
+import { ScoreboardPage } from "./pages/ScoreboardPage";
 import { MissionsPage } from "./pages/MissionsPage";
 import { MissionDetailPage } from "./pages/MissionDetailPage";
 import { LeaderLoginPage } from "./pages/LeaderLoginPage";
 import { LeaderDashboardPage } from "./pages/LeaderDashboardPage";
-import { EvaluationsPage } from "./pages/EvaluationsPage";
+import { ManageRoversPage } from "./pages/ManageRoversPage";
+import { LeaderEvaluationPage } from "./pages/LeaderEvaluationPage";
 import { ReportsPage } from "./pages/ReportsPage";
 
-function ProtectedLeaderRoute({ children }) {
-  const isLeader = localStorage.getItem("havenwood-leader-auth") === "true";
-  return isLeader ? children : <Navigate to="/leader-login" replace />;
+function LeaderRoute({ children }) {
+  return isLeaderSession() ? children : <Navigate to="/leader-login" replace />;
+}
+
+function RoverRoute({ children }) {
+  return isRoverSession() ? children : <Navigate to="/rover-login" replace />;
 }
 
 export default function App() {
@@ -32,41 +41,25 @@ export default function App() {
 
   return (
     <AppShell settings={settings}>
-      {loading ? <div className="panel">Loading transmission...</div> : null}
-      {error ? <div className="panel error-panel">{error}</div> : null}
+      {loading ? <div className="notice">Loading A.R.K. feed...</div> : null}
+      {error ? <div className="notice error-panel">{error}</div> : null}
       {!loading && !error ? (
         <Routes>
           <Route path="/" element={<HomePage settings={settings} />} />
           <Route path="/rules" element={<RulesPage />} />
-          <Route path="/crew-access" element={<CrewAccessPage />} />
-          <Route path="/crew/:crewId" element={<CrewDashboardPage />} />
+          <Route path="/briefing" element={<BriefingPage />} />
+          <Route path="/evaluation-system" element={<EvaluationSystemPage />} />
+          <Route path="/signup" element={<RoverSignupPage />} />
+          <Route path="/rover-login" element={<RoverLoginPage />} />
+          <Route path="/leader-login" element={<LeaderLoginPage />} />
+          <Route path="/scoreboard" element={<ScoreboardPage />} />
           <Route path="/missions" element={<MissionsPage />} />
           <Route path="/missions/:missionId" element={<MissionDetailPage />} />
-          <Route path="/leader-login" element={<LeaderLoginPage />} />
-          <Route
-            path="/leader"
-            element={(
-              <ProtectedLeaderRoute>
-                <LeaderDashboardPage />
-              </ProtectedLeaderRoute>
-            )}
-          />
-          <Route
-            path="/leader/evaluations"
-            element={(
-              <ProtectedLeaderRoute>
-                <EvaluationsPage />
-              </ProtectedLeaderRoute>
-            )}
-          />
-          <Route
-            path="/leader/reports"
-            element={(
-              <ProtectedLeaderRoute>
-                <ReportsPage />
-              </ProtectedLeaderRoute>
-            )}
-          />
+          <Route path="/rover" element={<RoverRoute><RoverDashboardPage /></RoverRoute>} />
+          <Route path="/leader" element={<LeaderRoute><LeaderDashboardPage /></LeaderRoute>} />
+          <Route path="/leader/rovers" element={<LeaderRoute><ManageRoversPage /></LeaderRoute>} />
+          <Route path="/leader/evaluations" element={<LeaderRoute><LeaderEvaluationPage /></LeaderRoute>} />
+          <Route path="/leader/reports" element={<LeaderRoute><ReportsPage /></LeaderRoute>} />
         </Routes>
       ) : null}
     </AppShell>

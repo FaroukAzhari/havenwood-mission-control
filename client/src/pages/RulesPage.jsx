@@ -1,29 +1,31 @@
 const rules = [
   "No one gets left behind.",
-  "Respect time and formations.",
-  "Keep the Safe Zone clean.",
+  "Respect time, formations, and leader instructions.",
+  "Phones are used only for camp-related access, missions, scoring, and approved communication.",
   "No unsafe behavior during night missions.",
-  "Phones are used only for missions, photos, and communication when allowed.",
-  "Respect leaders and crew members.",
-  "Protect equipment and nature.",
-  "Every mission requires teamwork."
+  "Stay inside assigned boundaries.",
+  "Protect equipment, tools, water, food, and nature.",
+  "Keep faction areas and common areas clean.",
+  "Every Rover must participate.",
+  "Competition must remain respectful.",
+  "Win with honor or do not win at all.",
+  "Report injuries, fatigue, conflicts, or safety risks immediately.",
+  "Leave the Outpost better than you found it."
 ];
 
 export function RulesPage() {
   return (
-    <section className="stack">
-      <article className="panel">
-        <p className="eyebrow">Mission Protocol</p>
-        <h2>Camp Rules</h2>
-        <div className="rule-list">
-          {rules.map((rule) => (
-            <div key={rule} className="rule-item">
-              <span>0{rules.indexOf(rule) + 1}</span>
-              <p>{rule}</p>
-            </div>
-          ))}
-        </div>
-      </article>
+    <section className="page-section">
+      <p className="eyebrow">Survival Laws</p>
+      <h1>Outpost Code</h1>
+      <div className="rule-list">
+        {rules.map((rule, index) => (
+          <article className="rule-item" key={rule}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <p>{rule}</p>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }

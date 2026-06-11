@@ -1,82 +1,204 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import request from "supertest";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { createApp } from "../src/app.js";
+import { closeDatabaseConnection, connectToDatabase, getCollections } from "../src/lib/db.js";
+import { loadSeedDataFromFiles } from "../src/lib/file-seed.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const dataDir = path.resolve(__dirname, "../data");
+let mongoServer;
 
-async function readJson(name) {
-  return JSON.parse(await fs.readFile(path.join(dataDir, name), "utf8"));
+async function resetDatabase() {
+  const collections = getCollections();
+  await Promise.all([
+    collections.users.deleteMany({}),
+    collections.factions.deleteMany({}),
+    collections.roles.deleteMany({}),
+    collections.missions.deleteMany({}),
+    collections.evaluations.deleteMany({}),
+    collections.settings.deleteMany({})
+  ]);
+
+  const seed = await loadSeedDataFromFiles();
+  await collections.users.insertMany(seed.users);
+  await collections.factions.insertMany(seed.factions);
+  await collections.roles.insertMany(seed.roles);
+  await collections.missions.insertMany(seed.missions);
+  await collections.settings.insertOne({ id: "app-settings", ...seed.settings });
 }
-
-async function writeJson(name, data) {
-  await fs.writeFile(path.join(dataDir, name), `${JSON.stringify(data, null, 2)}\n`, "utf8");
-}
-
-const seedState = {};
 
 test.before(async () => {
-  for (const name of ["crews.json", "evaluations.json", "settings.json"]) {
-    seedState[name] = await readJson(name);
+  mongoServer = await MongoMemoryServer.create();
+  process.env.MONGODB_URI = mongoServer.getUri();
+  process.env.MONGODB_DB_NAME = "last-outpost-test";
+  await connectToDatabase();
+});
+
+test.beforeEach(async () => {
+  await resetDatabase();
+});
+
+test.after(async () => {
+  await closeDatabaseConnection();
+  if (mongoServer) {
+    await mongoServer.stop();
   }
 });
 
-test.afterEach(async () => {
-  for (const [name, data] of Object.entries(seedState)) {
-    await writeJson(name, data);
-  }
-});
-
-test("GET /api/crews returns computed scores", async () => {
-  const app = createApp();
-  const response = await request(app).get("/api/crews");
-
-  assert.equal(response.status, 200);
-  assert.equal(response.body.length, 4);
-  assert.equal(response.body[0].totalScore, 63);
-  assert.equal(response.body[0].gateStabilityLevel, "Critical");
-});
-
-test("mission submission accepts normalized answers and persists completion", async () => {
+test("leader auth supports seeded leader accounts", async () => {
   const app = createApp();
   const response = await request(app)
-    .post("/api/missions/the-first-transmission/submit")
-    .send({ crewId: "signalers", answer: "  havenwood  " });
+    .post("/api/auth/leader")
+    .send({ username: "commander", password: "rebuild2200" });
 
   assert.equal(response.status, 200);
-  assert.equal(response.body.success, true);
-  assert.equal(response.body.message, "ACCESS GRANTED");
-
-  const crews = await readJson("crews.json");
-  const signalers = crews.find((crew) => crew.id === "signalers");
-  assert.ok(signalers.completedMissionIds.includes("the-first-transmission"));
+  assert.equal(response.body.user.role, "leader");
+  assert.equal(response.body.user.password, undefined);
 });
 
-test("leader updates shadow marks and recalculates crew score", async () => {
+test("rover signup creates an unassigned rover", async () => {
   const app = createApp();
   const response = await request(app)
-    .post("/api/crews/lanterns/shadow")
-    .send({ delta: 1 });
+    .post("/api/rovers/signup")
+    .send({
+      fullName: "Test Rover",
+      nickname: "Scout",
+      password: "1234",
+      confirmPassword: "1234"
+    });
 
-  assert.equal(response.status, 200);
-  assert.equal(response.body.shadowMarks, 1);
-  assert.equal(response.body.totalScore, 68);
+  assert.equal(response.status, 201);
+  assert.equal(response.body.user.role, "rover");
+  assert.equal(response.body.user.status, "unassigned");
+  assert.equal(response.body.user.factionId, null);
 });
 
-test("reports respect manual most improved selection", async () => {
+test("leaders can assign rover faction and role", async () => {
+  const collections = getCollections();
+  await collections.users.insertOne({
+    id: "rover-test",
+    fullName: "Test Rover",
+    fullNameKey: "test rover",
+    nickname: "",
+    nicknameKey: "",
+    password: "1234",
+    displayName: "Test Rover",
+    role: "rover",
+    status: "unassigned",
+    factionId: null,
+    assignedRole: null
+  });
+
   const app = createApp();
+  const response = await request(app)
+    .patch("/api/rovers/rover-test/assignment")
+    .send({ factionId: "wardens", assignedRole: "engineer" });
 
-  await request(app)
-    .post("/api/reports/most-improved")
-    .send({ memberId: "jana-trackers" })
-    .expect(200);
+  assert.equal(response.status, 200);
+  assert.equal(response.body.user.status, "assigned");
+  assert.equal(response.body.user.factionId, "wardens");
+  assert.equal(response.body.user.assignedRole, "engineer");
+});
 
-  const report = await request(app).get("/api/reports");
-  assert.equal(report.status, 200);
-  assert.equal(report.body.mostImproved.id, "jana-trackers");
+test("leader assignment blocks duplicate roles inside one faction", async () => {
+  const collections = getCollections();
+  await collections.users.insertMany([
+    {
+      id: "rover-engineer",
+      fullName: "Assigned Engineer",
+      fullNameKey: "assigned engineer",
+      nickname: "",
+      nicknameKey: "",
+      password: "1234",
+      displayName: "Assigned Engineer",
+      role: "rover",
+      status: "assigned",
+      factionId: "wardens",
+      assignedRole: "engineer"
+    },
+    {
+      id: "rover-candidate",
+      fullName: "Candidate Rover",
+      fullNameKey: "candidate rover",
+      nickname: "",
+      nicknameKey: "",
+      password: "1234",
+      displayName: "Candidate Rover",
+      role: "rover",
+      status: "unassigned",
+      factionId: null,
+      assignedRole: null
+    }
+  ]);
+
+  const app = createApp();
+  const response = await request(app)
+    .patch("/api/rovers/rover-candidate/assignment")
+    .send({ factionId: "wardens", assignedRole: "engineer" });
+
+  assert.equal(response.status, 409);
+  assert.match(response.body.message, /already holds this role/);
+});
+
+test("leader assignment warns when faction exceeds five rovers", async () => {
+  const collections = getCollections();
+  await collections.users.insertMany(
+    Array.from({ length: 5 }, (_, index) => ({
+      id: `wardens-rover-${index}`,
+      fullName: `Wardens Rover ${index}`,
+      fullNameKey: `wardens rover ${index}`,
+      nickname: "",
+      nicknameKey: "",
+      password: "1234",
+      displayName: `Wardens Rover ${index}`,
+      role: "rover",
+      status: "assigned",
+      factionId: "wardens",
+      assignedRole: null
+    })).concat({
+      id: "extra-rover",
+      fullName: "Extra Rover",
+      fullNameKey: "extra rover",
+      nickname: "",
+      nicknameKey: "",
+      password: "1234",
+      displayName: "Extra Rover",
+      role: "rover",
+      status: "unassigned",
+      factionId: null,
+      assignedRole: null
+    })
+  );
+
+  const app = createApp();
+  const response = await request(app)
+    .patch("/api/rovers/extra-rover/assignment")
+    .send({ factionId: "wardens", assignedRole: null });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.warning, "This faction now has more than 5 Rovers.");
+});
+
+test("evaluation scores are saved and totaled out of 100", async () => {
+  const app = createApp();
+  const response = await request(app)
+    .post("/api/evaluations")
+    .send({
+      day: "Day 1",
+      factionId: "foragers",
+      survivalSkill: 18,
+      security: 17,
+      resources: 16,
+      morale: 19,
+      humanity: 20,
+      notes: "Balanced work.",
+      breachAlerts: ["Lateness"],
+      repairMissions: ["Lead the next formation"]
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.evaluation.total, 90);
+
+  const summary = await request(app).get("/api/evaluations");
+  assert.equal(summary.body.cumulative.find((entry) => entry.faction.id === "foragers").total, 90);
 });

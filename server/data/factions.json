@@ -1,0 +1,22 @@
+[
+  {
+    "id": "wardens",
+    "name": "The Wardens",
+    "motto": "Hold the Line",
+    "description": "The Wardens believe survival depends on discipline, protection, structure, and order. They are expected to be organized, reliable, and strong under pressure.",
+    "challenge": "Avoid becoming too rigid, controlling, or dependent on rules without understanding the human side of leadership.",
+    "symbol": "Shield / Watchtower",
+    "color": "Dark green",
+    "coreValues": ["Discipline", "Security", "Responsibility", "Protection"]
+  },
+  {
+    "id": "foragers",
+    "name": "The Foragers",
+    "motto": "Find a Way",
+    "description": "The Foragers believe survival depends on creativity, resourcefulness, speed, and adaptability. They are practical, energetic, and able to solve problems with limited resources.",
+    "challenge": "Avoid chaos, rushed decisions, or careless execution.",
+    "symbol": "Compass / Backpack / Trail Mark",
+    "color": "Muted orange",
+    "coreValues": ["Resourcefulness", "Flexibility", "Creativity", "Survival Instinct"]
+  }
+]

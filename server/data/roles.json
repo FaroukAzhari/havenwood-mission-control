@@ -1,0 +1,27 @@
+[
+  {
+    "id": "outpost-captain",
+    "name": "Outpost Captain",
+    "description": "Leads the faction during missions, keeps decision-making organized, makes sure every member is involved, and represents the faction during briefings."
+  },
+  {
+    "id": "scout-radio-operator",
+    "name": "Scout / Radio Operator",
+    "description": "Handles navigation, maps, trails, clues, A.R.K. messages, mission envelopes, and communication with leaders."
+  },
+  {
+    "id": "engineer",
+    "name": "Engineer",
+    "description": "Leads pioneering, knots, lashings, shelter building, repairs, barricades, structures, and technical outdoor tasks."
+  },
+  {
+    "id": "medic-peacekeeper",
+    "name": "Medic / Peacekeeper",
+    "description": "Watches hydration, fatigue, first aid awareness, emotional balance, teamwork, conflict, inclusion, and respect."
+  },
+  {
+    "id": "quartermaster-archivist",
+    "name": "Quartermaster / Archivist",
+    "description": "Controls supplies, tools, ration cards, equipment return, collected clues, written notes, and the faction's final report."
+  }
+]

@@ -1,70 +1,70 @@
-# Havenwood Mission Control
+# The Last Outpost: Year 2200
 
-Havenwood Mission Control is a full-stack JavaScript web app for a 4-day Rover Scout summer camp experience inspired by a sci-fi mystery theme: `The Other Side: Operation Close the Gate`.
+The Last Outpost is a full-stack JavaScript camp app for a Rover survival camp set in the year 2200. A.R.K., the Autonomous Recovery Kernel, monitors factions, assignments, missions, breach alerts, repair missions, and the Human Override Index.
 
 ## Stack
 
 - `client/`: React + Vite
 - `server/`: Node.js + Express
-- Persistence: local JSON files in `server/data`
-- Styling: responsive CSS, mobile-first, dark mission-control UI
+- Database: MongoDB Atlas / MongoDB
+- Language: JavaScript
 
-## Features
+## Local Setup
 
-- Crew mobile flow with code-based access
-- Crew dashboard with score, stability, mission tracking, and transmissions
-- Mission archive grouped by day with answer submission for puzzle missions
-- Leader dashboard for crew scoring and notes
-- Member evaluation board with final title assignment
-- Reports page with standings, awards, JSON export, and print-friendly layout
+Create `.env` in the project root:
 
-## Setup
+```env
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DB_NAME=lastOutpost
+PORT=4000
+VITE_API_BASE_URL=http://localhost:4000/api
+```
 
-Run from the project root:
+Install dependencies and start the app:
 
 ```bash
 npm install
+npm run seed -w server
 npm run dev
 ```
 
-This starts:
+The client runs at `http://localhost:5173`. The API runs on the port in `.env`.
 
-- React client at `http://localhost:5173`
-- Express API at `http://localhost:4000`
+## Default Leader Accounts
 
-## Other Commands
+- `commander` / `rebuild2200`
+- `ark-controller` / `override2200`
+- `outpost-marshal` / `holdtheline2200`
+
+## Main Flows
+
+- Public users can view the landing page, Survival Laws, A.R.K. Briefing, Human Override Index, sign up, and log in.
+- Rovers can sign up, log in, view their profile, faction, role, rules, briefing, scoreboard, and missions.
+- Leaders can manage Rovers, assign factions, assign roles, enter daily evaluations, add breach alerts, add repair missions, and view reports.
+
+## Seed Data
+
+The seed script creates:
+
+- Two factions: The Wardens and The Foragers
+- Five faction roles
+- Three leader accounts
+- Empty Rover list
+- Daily mission files
+- Empty evaluation board
+
+Run this only when the database is empty:
 
 ```bash
+npm run seed -w server
+```
+
+## Commands
+
+```bash
+npm run dev
 npm run client
 npm run server
 npm run build
 npm test
 ```
-
-## Authentication
-
-- Crew codes:
-  - `SIGNAL`
-  - `LIGHT`
-  - `GATE`
-  - `TRACK`
-- Leader password:
-  - `close-the-gate`
-
-Leader auth is intentionally simple and stored in `localStorage`.
-
-## Data Files
-
-The app persists changes directly into:
-
-- `server/data/crews.json`
-- `server/data/members.json`
-- `server/data/missions.json`
-- `server/data/evaluations.json`
-- `server/data/settings.json`
-
-## Notes
-
-- No external database or paid services are required.
-- Mission answers are normalized before checking, so case and extra spacing do not matter.
-- Missions without answer fields are leader-verified and do not auto-complete from the crew UI.
